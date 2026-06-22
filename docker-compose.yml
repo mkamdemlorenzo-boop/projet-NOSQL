@@ -1,0 +1,29 @@
+services:
+  mongodb:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - streamflix-data:/data/db
+
+  mysql:
+    image: mysql:9
+    volumes:
+      - mysql_data:/data/db
+    environment:
+      MYSQL_ROOT_PASSWORD: game
+      MYSQL_DATABASE: game
+      MYSQL_USER: game
+      MYSQL_PASSWORD: game
+    ports:
+      - "3306:3306"
+
+  redis:
+    image: redis:8.6.4-trixie
+    
+  neo4j:
+    image: neo4j:trixie
+
+volumes:
+  streamflix-data:
+  mysql_data:
