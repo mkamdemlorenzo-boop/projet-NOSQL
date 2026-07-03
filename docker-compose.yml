@@ -1,29 +1,48 @@
 services:
-  mongodb:
-    image: mongo:8
+  node:
+    image: gameproj
     ports:
-      - "27017:27017"
-    volumes:
-      - streamflix-data:/data/db
+      - "8080:8080"
+    depends_on:
+      - mysql
 
   mysql:
     image: mysql:9
-    volumes:
-      - mysql_data:/data/db
     environment:
       MYSQL_ROOT_PASSWORD: game
-      MYSQL_DATABASE: game
+      MYSQL_DATABASE: gameproj
       MYSQL_USER: game
       MYSQL_PASSWORD: game
     ports:
       - "3306:3306"
+    volumes:
+      - streamflix-mysql:/var/lib/mysql
 
-  redis:
-    image: redis:8.6.4-trixie
+  # mongodb:
+  #   image: mongo:8
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - streamflix-mongodb:/data/db
+
+  # redis:
+  #   image: redis:8.6.4-trixie
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - streamflix-redis:/data
     
-  neo4j:
-    image: neo4j:trixie
+  # neo4j:
+  #   image: neo4j:trixie
+  #   ports:
+  #     - "7687:7687"
+  #   environment:
+  #     - NEO4J_AUTH=neo4j/streamflix
+  #   volumes:
+  #     - streamflix-neo4j:/data/db
 
 volumes:
-  streamflix-data:
-  mysql_data:
+  streamflix-mongodb:
+  streamflix-redis:
+  streamflix-neo4j:
+  streamflix-mysql:
