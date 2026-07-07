@@ -5,7 +5,10 @@ services:
       - "8080:8080"
     depends_on:
       - mysql
-
+      - mongodb
+      - redis
+      - neo4j
+      
   mysql:
     image: mysql:8.4
     environment:
@@ -25,21 +28,21 @@ services:
     volumes:
       - streamflix-mongodb:/data/db
 
-  # redis:
-  #   image: redis:8.6.4-trixie
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - streamflix-redis:/data
+  redis:
+    image: redis:8.6.4-trixie
+    ports:
+      - "6379:6379"
+    volumes:
+      - streamflix-redis:/data
     
-  # neo4j:
-  #   image: neo4j:trixie
-  #   ports:
-  #     - "7687:7687"
-  #   environment:
-  #     - NEO4J_AUTH=neo4j/streamflix
-  #   volumes:
-  #     - streamflix-neo4j:/data/db
+  neo4j:
+    image: neo4j:trixie
+    ports:
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/streamflix
+    volumes:
+      - streamflix-neo4j:/data/db
 
 volumes:
   streamflix-mongodb:

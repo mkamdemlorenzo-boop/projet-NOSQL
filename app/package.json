@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "mongodb": "^7.4.0",
-    "mysql2": "^3.22.5"
+    "mysql2": "^3.22.5",
+    "neo4j-driver": "^6.2.0",
+    "redis": "^6.1.0"
   }
 }

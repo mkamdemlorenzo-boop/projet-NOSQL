@@ -1,19 +1,23 @@
 const mysql = require("mysql2");
 const { MongoClient } = require("mongodb");
+const { createClient } = require("redis");
 
-const client = new MongoClient("mongodb://mongodb:27017");
 
-function connectSQL() {
-  const con = mysql.createConnection({
+const con = mysql.createConnection({
     host: "mysql",
     user: "game",
     password: "game",
     database: "gameproj",
   });
+const client_mongo = new MongoClient("mongodb://mongodb:27017");
+const client_redis = createClient({
+  url: "redis://redis:6379"
+});
 
+function connectSQL() {
   con.connect((err) => {
     if (err) {
-      console.error(err.code);
+      console.error("MySQL erreur :", err);
       setTimeout(connectSQL, 2000);
       return;
     }
@@ -23,14 +27,28 @@ function connectSQL() {
 }
 
 async function connectMongo() {
-  await client.connect();
-  console.log("Connecté à MongoDB !");
-  
-  const db = client.db("gameproj");
+  try {
+    await client_mongo.connect();
+    console.log("Connecté à MongoDB !");
+  } catch (err) {
+    console.error("MongoDB erreur :", err);
+    setTimeout(connectMongo, 2000);
+  }
+}
+
+async function connectRedis() {
+  try {
+    await client_redis.connect();
+    console.log("Connecté à Redis !");
+  } catch (err) {
+    console.error("Redis erreur :", err);
+    setTimeout(connectRedis, 2000);
+  }
 }
 
 connectMongo();
 connectSQL();
+connectRedis();
 
 const http = require("http");
 
