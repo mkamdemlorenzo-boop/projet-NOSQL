@@ -1,6 +1,9 @@
 const mysql = require("mysql2");
+const { MongoClient } = require("mongodb");
 
-function connectDB() {
+const client = new MongoClient("mongodb://mongodb:27017");
+
+function connectSQL() {
   const con = mysql.createConnection({
     host: "mysql",
     user: "game",
@@ -11,7 +14,7 @@ function connectDB() {
   con.connect((err) => {
     if (err) {
       console.error(err.code);
-      setTimeout(connectDB, 2000);
+      setTimeout(connectSQL, 2000);
       return;
     }
 
@@ -19,7 +22,15 @@ function connectDB() {
   });
 }
 
-connectDB();
+async function connectMongo() {
+  await client.connect();
+  console.log("Connecté à MongoDB !");
+  
+  const db = client.db("gameproj");
+}
+
+connectMongo();
+connectSQL();
 
 const http = require("http");
 

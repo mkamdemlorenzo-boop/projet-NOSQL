@@ -18,12 +18,12 @@ services:
     volumes:
       - streamflix-mysql:/var/lib/mysql
 
-  # mongodb:
-  #   image: mongo:8
-  #   ports:
-  #     - "27017:27017"
-  #   volumes:
-  #     - streamflix-mongodb:/data/db
+  mongodb:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - streamflix-mongodb:/data/db
 
   # redis:
   #   image: redis:8.6.4-trixie

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "mongodb": "^7.4.0",
     "mysql2": "^3.22.5"
   }
 }
