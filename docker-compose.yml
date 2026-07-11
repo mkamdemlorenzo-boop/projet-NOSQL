@@ -16,6 +16,11 @@ services:
       MYSQL_DATABASE: gameproj
       MYSQL_USER: game
       MYSQL_PASSWORD: game
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ugame", "-pgame"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     ports:
       - "3306:3306"
     volumes:
@@ -36,13 +41,13 @@ services:
       - streamflix-redis:/data
     
   neo4j:
-    image: neo4j:trixie
+    image: neo4j:5.26.28
     ports:
       - "7687:7687"
     environment:
       - NEO4J_AUTH=neo4j/streamflix
     volumes:
-      - streamflix-neo4j:/data/db
+      - streamflix-neo4j:/data
 
 volumes:
   streamflix-mongodb:

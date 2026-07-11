@@ -7,4 +7,4 @@ WORKDIR /app
 
 COPY --chown=Game:Game ./app .
 ENV PORT=8080
-CMD ["node", "node.js"]
+CMD ["node", "main.js"]
