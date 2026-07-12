@@ -1,25 +1,17 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Jeux</title>
+    <title>Méthode de connexion</title>
 </head>
 <body>
+    <form action="/register">
+        <button type="submit">register</button>
+    </form>
 
-<button id="addGame">Ajouter un jeu</button>
-
-<script>
-    document.getElementById("addGame").addEventListener("click", async () => {
-
-    const response = await fetch("/game", {
-        method: "POST"
-    });
-
-    const message = await response.text();
-
-    alert(message);
-});
-</script>
+    <form action="/login">
+        <button type="submit">login</button>
+    </form>
 
 </body>
 </html>

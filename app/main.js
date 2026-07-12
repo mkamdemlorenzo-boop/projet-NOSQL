@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const {Hash} = require("./hash.js");
 
 const server = express();
 
@@ -17,8 +18,8 @@ const [mongo, redis, mysql, neo4j] = await Promise.all([
     connectSQL(),
     connectNeo4j()
 ]);
-    await mysql.execute("create table if not exists user (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), password VARCHAR(255), profile_picture VARCHAR(50))")
-    await mysql.execute("create table if not exists game (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), profile_picture VARCHAR(50))")
+    await mysql.execute("create table if not exists user (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, profile_picture VARCHAR(50))")
+    await mysql.execute("create table if not exists game (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, profile_picture VARCHAR(50))")
     await mongo.collection("game").insertOne({
         nom: "Honkai Impact 3rd",
         genre: ["Action et RPG"],
@@ -27,19 +28,53 @@ const [mongo, redis, mysql, neo4j] = await Promise.all([
         prix: 0.00
     });
 
+server.use(express.urlencoded({ extended: true }));
+
 server.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "templates", "home.html"));
 });
 
-app.post("/game", async (req, res) => {
+server.get("/addgame", (req, res) => {
+    res.sendFile(path.join(__dirname, "templates", "create_game.html"));
+});
+
+server.post("/addgame", async (req, res) => {
+    const name = req.body.name;
+    const support = req.body.support;
+    await mongo.collection("game").insertOne({
+        name: name,
+        genre: [""],
+        desc: "",
+        support: [""],
+        prix: 0.00
+    });
     await mysql.execute(
         "INSERT INTO game(name) VALUES (?)",
-        ["Minecraft"]
+        [name]
     );
-
-    res.send("Jeu ajouté !");
+    res.redirect("/");
 });
-    res.send("Jeu ajouté !");
+
+server.get("/register", (req, res) => {
+    res.sendFile(path.join(__dirname, "templates", "register.html"));
+});
+
+server.post("/register", async (req, res) => {
+    const name = req.body.name;
+    const password = Hash(req.body.password);
+    await mysql.execute(
+        "INSERT INTO user(name,password) VALUES (?,?)",
+        [name, password]
+    );
+    res.redirect("/");
+});
+
+server.get("/login", (req, res) => {
+    res.sendFile(path.join(__dirname, "templates", "login.html"));
+});
+
+server.post("/login", (req, res) => {
+    res.sendFile(path.join(__dirname, "templates", "login.html"));
 });
 
 server.listen(process.env.PORT || 8080, "0.0.0.0", () => {
