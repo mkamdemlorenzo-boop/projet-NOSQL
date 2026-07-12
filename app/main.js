@@ -31,15 +31,14 @@ server.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "templates", "home.html"));
 });
 
-server.get("/addgame", async (req, res) => {
-    await mongo.collection("game").insertOne({
-        nom: "test",
-        genre: [""],
-        desc: "",
-        suport: [""],
-        prix: 0.00
-    });
+app.post("/game", async (req, res) => {
+    await mysql.execute(
+        "INSERT INTO game(name) VALUES (?)",
+        ["Minecraft"]
+    );
 
+    res.send("Jeu ajouté !");
+});
     res.send("Jeu ajouté !");
 });
 
