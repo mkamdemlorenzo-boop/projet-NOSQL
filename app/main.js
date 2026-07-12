@@ -12,12 +12,12 @@ const {
 } = require("./database.js")
 
 async function start() {
-const [mongo, redis, mysql, neo4j] = await Promise.all([
-    connectMongo(),
-    connectRedis(),
-    connectSQL(),
-    connectNeo4j()
-]);
+    const [mongo, redis, mysql, neo4j] = await Promise.all([
+        connectMongo(),
+        connectRedis(),
+        connectSQL(),
+        connectNeo4j()
+    ]);
     await mysql.execute("create table if not exists user (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, profile_picture VARCHAR(50))")
     await mysql.execute("create table if not exists game (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, profile_picture VARCHAR(50))")
     // await mongo.collection("game").insertOne({
@@ -44,10 +44,10 @@ server.post("/addgame", async (req, res) => {
     const editor = req.body.editor;
     const genre = req.body.genre;
     const desc = req.body.desc;
-    const prix = parseInt(req.body.prix);
-    if (name != "" || support != "" || genre != "" || desc != "" || editor != "")
+    const prix = Number(req.body.prix);
+    if (name != "" && support != "" && genre != "" && desc != "" && editor != "")
     {
-        if (typeof prix === "number") {
+        if (!Number.isNaN(prix)) {
             await mongo.collection("game").insertOne({
                 name: name,
                 editor: editor,
@@ -108,12 +108,11 @@ server.get("/user", async (req, res) => {
 });
 
 server.get("/friend/:id", async (req, res) => {
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     const [rows] = await mysql.execute(
         "SELECT name, id FROM user WHERE id != ?",
         [id]
     );
-
     let html = `
     <!DOCTYPE html>
     <html>
@@ -124,12 +123,27 @@ server.get("/friend/:id", async (req, res) => {
 
     for (const user of rows) {
     html += `
-        <form action="/profile/${user.id}" method="GET">
+        <form action="/addfriend/${id}->${user.id}" method="GET">
             <button type="submit">${user.name}</button>
         </form>
     `;
-}
+    }
     res.send(html);
+});
+
+server.get("/addfriend/:id", async (req, res) => {
+    const id = req.params.id;
+    const [id1, id2] = id.split("->");
+    const relation = neo4j.session();
+
+    await relation.run(`
+    MATCH (a:User {id:$id1})
+    MATCH (b:User {id:$id2})
+    MERGE (a)-[:FRIEND]->(b)
+    `, { id1: Number(id1), id2: Number(id2) });
+
+    await relation.close()
+    res.redirect(`/friend/${id1}`);
 });
 
 server.get("/profile/:id", async (req, res) => {
@@ -141,6 +155,13 @@ server.get("/profile/:id", async (req, res) => {
     );
     const user = rows[0]
     const vue = await redis.incr(user.name);
+    const relation = neo4j.session();
+    const my_friend = await relation.run(`
+        MATCH (u:User {id: $id})-[:FRIEND]->(friend:User)
+        RETURN friend
+    `,
+    { id: Number(id) });
+    await relation.close();
     let html = `
     <!DOCTYPE html>
     <html>
@@ -153,8 +174,14 @@ server.get("/profile/:id", async (req, res) => {
         <ul>
     `;
 
-    for (const user of rows) {
-    }
+    for (const records of my_friend.records) {
+        const friend = records.get("friend").properties;
+    html +=`
+    <h1>Liste d'amie</h1>
+        <form action="/profile/${friend.id}" method="GET">
+            <button type="submit">${friend.name}</button>
+        </form> 
+    `}
 
     html += `
         </ul>
@@ -234,6 +261,8 @@ server.get("/resume/:id", async (req, res) => {
 server.post("/register", async (req, res) => {
     const name = req.body.name;
     const password = Hash(req.body.password);
+    if (name != "" && password != "")
+    {
     const [rows] = await mysql.execute("SELECT name from user where name = ?;",
         [name]);
 
@@ -242,10 +271,27 @@ server.post("/register", async (req, res) => {
             "INSERT INTO user(name,password) VALUES (?,?)",
             [name, password]
         );
-
+        const [rows] = await mysql.execute("SELECT id from user where name = ?;",
+        [name]);
+        const user = neo4j.session();
+        await user.run(
+            `
+            CREATE (:User {
+                id: $id,
+                name: $name
+            })
+            `,
+            {
+                id: rows[0].id,
+                name: name
+            });
+        await user.close();
         res.redirect("/user");
     }
+    
     res.redirect("/register");
+    
+}
 });
 
 server.get("/login", (req, res) => {
@@ -264,7 +310,7 @@ server.post("/login", async (req, res) => {
     res.redirect("/login");
 });
 
-server.listen(process.env.PORT || 8080, "0.0.0.0", () => {
+server.listen(process.env.PORT, "0.0.0.0", () => {
 console.log("Serveur démarré");
 });
 
