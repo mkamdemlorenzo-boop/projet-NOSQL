@@ -107,6 +107,31 @@ server.get("/user", async (req, res) => {
     res.send(html);
 });
 
+server.get("/friend/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const [rows] = await mysql.execute(
+        "SELECT name, id FROM user WHERE id != ?",
+        [id]
+    );
+
+    let html = `
+    <!DOCTYPE html>
+    <html>
+    <body>
+        <h1>Liste des utilisateurs Existant pour envoie d'amie</h1>
+        <ul>
+    `;
+
+    for (const user of rows) {
+    html += `
+        <form action="/profile/${user.id}" method="GET">
+            <button type="submit">${user.name}</button>
+        </form>
+    `;
+}
+    res.send(html);
+});
+
 server.get("/profile/:id", async (req, res) => {
     const id = req.params.id;
 
@@ -115,6 +140,7 @@ server.get("/profile/:id", async (req, res) => {
         [id]
     );
     const user = rows[0]
+    const vue = await redis.incr(user.name);
     let html = `
     <!DOCTYPE html>
     <html>
@@ -123,6 +149,7 @@ server.get("/profile/:id", async (req, res) => {
     </head>
     <body>
         <h1>Name: ${user.name}</h1>
+        <h1>nombre de vue: ${vue}</h1>
         <ul>
     `;
 
@@ -131,7 +158,7 @@ server.get("/profile/:id", async (req, res) => {
 
     html += `
         </ul>
-    <form action="/friend">
+    <form action="/friend/${id}">
         <button type="submit">create link</button>
     </form>
     </body>
@@ -184,6 +211,7 @@ server.get("/resume/:id", async (req, res) => {
     );
 
     const detail = await mongo.collection("game").findOne({name: rows[0].name}); //, editor: rows[0].editor 
+    const vue = await redis.incr(user.name);
     let html = `
     <!DOCTYPE html>
     <html>
@@ -197,6 +225,7 @@ server.get("/resume/:id", async (req, res) => {
         <h1>genre: ${detail.genre[0]}</h1>
         <h1>support: ${detail.support[0]}</h1>
         <h1>prix: ${detail.prix}</h1>
+        <h1>vue: ${vue}</h1>
         <ul>
     `;
     res.send(html);
