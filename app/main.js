@@ -1,4 +1,8 @@
-const http = require("http");
+const express = require("express");
+const path = require("path");
+
+const server = express();
+
 const {  
     connectSQL,
     connectMongo,
@@ -17,19 +21,30 @@ const [mongo, redis, mysql, neo4j] = await Promise.all([
     await mysql.execute("create table if not exists game (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), profile_picture VARCHAR(50))")
     await mongo.collection("game").insertOne({
         nom: "Honkai Impact 3rd",
-        suport: ["PC", "Mobile"]
+        genre: ["Action et RPG"],
+        desc: "L'ultime expérience anime d'action qui devient réelle ! Des ombrages celluloïdes HD, des combos infinis, des retours explosifs... Plongez dans l'action en temps réel de dernière génération ! Une histoire originale sur toutes les lèvres, des voix de premier choix... Entrez dans la légende !",
+        suport: ["PC", "Mobile"],
+        prix: 0.00
     });
 
-return [mongo, redis, mysql, neo4j]
-}
+server.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "templates", "home.html"));
+});
 
-start();
+server.get("/addgame", async (req, res) => {
+    await mongo.collection("game").insertOne({
+        nom: "test",
+        genre: [""],
+        desc: "",
+        suport: [""],
+        prix: 0.00
+    });
 
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end(`Hello World`);
+    res.send("Jeu ajouté !");
 });
 
 server.listen(process.env.PORT || 8080, "0.0.0.0", () => {
 console.log("Serveur démarré");
 });
+
+}start();
