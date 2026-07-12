@@ -62,19 +62,34 @@ server.get("/register", (req, res) => {
 server.post("/register", async (req, res) => {
     const name = req.body.name;
     const password = Hash(req.body.password);
-    await mysql.execute(
-        "INSERT INTO user(name,password) VALUES (?,?)",
-        [name, password]
-    );
-    res.redirect("/");
+    const [rows] = await mysql.execute("SELECT name from user where name = ?;",
+        [name]);
+
+    if (rows.length < 1) {
+        await mysql.execute(
+            "INSERT INTO user(name,password) VALUES (?,?)",
+            [name, password]
+        );
+
+        res.redirect("/");
+    }
+    res.redirect("/register");
 });
 
 server.get("/login", (req, res) => {
     res.sendFile(path.join(__dirname, "templates", "login.html"));
 });
 
-server.post("/login", (req, res) => {
-    res.sendFile(path.join(__dirname, "templates", "login.html"));
+server.post("/login", async (req, res) => {
+    const name = req.body.name;
+    const password = Hash(req.body.password);
+    const [rows] = await mysql.execute("SELECT name from user where name = ? and password = ?;",
+        [name, password]);
+
+    if (rows.length > 0) {
+        res.redirect("/");
+    }
+    res.redirect("/login");
 });
 
 server.listen(process.env.PORT || 8080, "0.0.0.0", () => {
